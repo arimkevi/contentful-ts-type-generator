@@ -33,6 +33,6 @@ export function getContent<T>(
     .then((response: contentful.EntryCollection<T>) => response.items[0])
 }
 
-getContent(locale, YourContentfulType)
+getContent<T>(locale, YourContentfulType)
 
 ```
