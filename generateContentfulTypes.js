@@ -67,7 +67,7 @@ const generateContentfulTypes = (contentfulManagementClient, space, environment,
                 stream.write(`export const ${toInterfaceName(item.sys.id, prefix)} = '${item.sys.id}'\n`)
                 stream.write(`export interface ${toInterfaceName(item.sys.id, prefix)} { \n`)
                 stream.write(`  //${item.name}\n`)
-                stream.write(`  //${item.description}\n`)
+                stream.write(`  /* ${item.description} */\n`)
                 item.fields.forEach(field => {
                   var type = formatType(field, prefix)
                   var nullable = field.required === 'true' ? '' : '?'
