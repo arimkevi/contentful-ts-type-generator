@@ -6,17 +6,12 @@ const contentful = require('contentful-management')
 const fs = require('fs')
 const path = require('path')
 
-const capitalize = (str) => {
-  return str.charAt(0).toUpperCase() + str.slice(1)
-}
+const toInterfaceName = (s, prefix = '') => {
 
-function getTypes(space) {
-  return space
-    .getContentTypes({ limit: 1000 })
-    .then(entries => {
-      return entries
-    })
-    .catch(e => console.log(e))
+  s.replace(/-[[:alnum:]]/gm, (match) => { console.log('Match', match); return match.slice(1).toUpperCase()})
+
+  return prefix + s.charAt(0).toUpperCase() + s.slice(1)
+    .replace(/-[A-Za-z0-9_]/g, (match) => match.slice(1).toUpperCase())
 }
 
 function formatType(field, prefix = '') {
@@ -30,11 +25,11 @@ function formatType(field, prefix = '') {
   if (type === 'Link' && field.linkType === 'Entry') {
     if(field.validations && field.validations[0] && field.validations[0].linkContentType) {
       if(field.validations[0].linkContentType.length === 1) {
-        return `Entry <${prefix}${capitalize(field.validations[0].linkContentType[0])}>`
+        return `Entry <${toInterfaceName(field.validations[0].linkContentType[0], prefix)}>`
       } else {
         let typeString = ''
         field.validations && field.validations[0].linkContentType.forEach(type => {
-          typeString = `${typeString} | ${prefix}${capitalize(type)}`
+          typeString = `${typeString} | ${toInterfaceName(type, prefix)}`
         })
         return `Entry <${typeString.substr(3)}>`
       }
@@ -48,7 +43,7 @@ function formatType(field, prefix = '') {
     if(validations !== undefined && validations.linkContentType) {
       var typeString = 'Entry < '
       validations.linkContentType.forEach(item => {
-        typeString = `${typeString}${capitalize(item)} ${validations.linkContentType.length === 1  ? '' : '|'} `
+        typeString = `${typeString}${toInterfaceName(item, prefix)} ${validations.linkContentType.length === 1  ? '' : '|'} `
       })
       typeString = `${typeString}>  []`
       return typeString.indexOf('| >') > 0 ? typeString.slice(0,typeString.indexOf('| >')) + typeString.slice(typeString.indexOf('| >')+1): typeString
@@ -64,20 +59,19 @@ const generateContentfulTypes = (contentfulManagementClient, space, environment,
       .then((environment) => {
         environment.getContentTypes({limit:1000})
           .then(result => {
-            console.log(result)
             const items = result.items
             var stream = fs.createWriteStream(outputFilePath)
             stream.once('open', () => {
               stream.write(`import { Entry, Asset } from 'contentful' \n`)
               items.forEach(item => {
-                stream.write(`export const ${prefix}${capitalize(item.sys.id)} = '${item.sys.id}'\n`)
-                stream.write(`export interface prefix${capitalize(item.sys.id)} { \n`)
+                stream.write(`export const ${toInterfaceName(item.sys.id, prefix)} = '${item.sys.id}'\n`)
+                stream.write(`export interface ${toInterfaceName(item.sys.id, prefix)} { \n`)
                 stream.write(`  //${item.name}\n`)
                 stream.write(`  //${item.description}\n`)
                 item.fields.forEach(field => {
                   var type = formatType(field, prefix)
                   var nullable = field.required === 'true' ? '' : '?'
-                  stream.write(`  ${prefix}${field.id}${nullable}: ${type}  \n`)
+                  stream.write(`  ${field.id}${nullable}: ${type}  \n`)
                 })
                 stream.write(`}\n\n`)
               })
