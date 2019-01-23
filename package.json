@@ -1,0 +1,25 @@
+{
+  "name": "contentful-ts-type-generator",
+  "version": "0.2.0",
+  "description": "Typescript type declaration file generator from Contentful models",
+  "main": "generateContentfulTypes.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": "git+https://github.com/arimkevi/contentful-ts-type-generator.git",
+  "keywords": [
+    "contentful",
+    "typescript",
+    "definition"
+  ],
+  "author": "Artur Rimkevitch",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/arimkevi/contentful-ts-type-generator/issues"
+  },
+  "homepage": "https://github.com/arimkevi/contentful-ts-type-generator#readme",
+  "dependencies": {
+    "commander": "^2.19.0",
+    "contentful-management": "^5.4.0"
+  }
+}
