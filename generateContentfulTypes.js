@@ -16,7 +16,13 @@ const toInterfaceName = (s, prefix = '') => {
 
 function formatType(field, prefix = '') {
   var type = field.type
-  if (type === 'Text' || type === 'Symbol') return 'string'
+  if (type === 'Text' || type === 'Symbol') {
+    if(field.validations && field.validations[0] && field.validations[0].in) {
+      return field.validations[0].in.map(validValue => `'${validValue}'`).join('|')
+    } else {
+      return 'string'
+    }
+  }
   if (type === 'Number' || type === 'Integer') return 'number'
   if (type === 'Boolean') return 'boolean'
   if (type === 'Link' && field.linkType === 'Asset') {
