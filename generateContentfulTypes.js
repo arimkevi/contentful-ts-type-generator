@@ -76,7 +76,7 @@ const generateContentfulTypes = (contentfulManagementClient, space, environment,
                 stream.write(`  /* ${item.description} */\n`)
                 item.fields.forEach(field => {
                   var type = formatType(field, prefix)
-                  var nullable = field.required === 'true' ? '' : '?'
+                  var nullable = field.required === true ? '' : '?'
                   stream.write(`  ${field.id}${nullable}: ${type}  \n`)
                 })
                 stream.write(`}\n\n`)
