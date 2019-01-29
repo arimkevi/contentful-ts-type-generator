@@ -18,9 +18,13 @@ function formatType(field, prefix = '', isArray = false) {
   var type = field.type
   if (type === 'Text' || type === 'Symbol') {
     if(field.validations && field.validations[0] && field.validations[0].in) {
-      return field.validations[0].in.map(validValue => `'${validValue}'`).join('|')
+      if(isArray) {
+        return `(${field.validations[0].in.map(validValue => `'${validValue}'`).join('|')})[]`
+      } else {
+        return field.validations[0].in.map(validValue => `'${validValue}'`).join('|')
+      }
     } else {
-      return 'string'
+      return 'string'+ (isArray ? '[]' : '')
     }
   }
   if (type === 'Number' || type === 'Integer') return 'number'
