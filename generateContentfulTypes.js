@@ -26,22 +26,14 @@ function formatType(field, prefix = '', isArray = false) {
   if (type === 'Number' || type === 'Integer') return 'number'
   if (type === 'Boolean') return 'boolean'
   if (type === 'Link' && field.linkType === 'Asset') {
-    if(isArray) {
-      return 'AssetCollection'
-    } else {
-      return 'Asset'
-    }
+    return `Asset${isArray ? '[]' : ''}`
   }
   if (type === 'Link' && field.linkType === 'Entry') {
     if(field.validations && field.validations[0] && field.validations[0].linkContentType) {
       const fieldTypes =  field.validations && field.validations[0].linkContentType.map(type => {
         return toInterfaceName(type, prefix)
       }).join('|')
-      if(!isArray) {
-        return `Entry<${fieldTypes}>`
-      } else {
-        return `EntryCollection<${fieldTypes}>`
-      }
+      return `Entry<${fieldTypes}>${isArray ? '[]' : ''}`
     } else {
       return 'any'
     }
@@ -60,7 +52,7 @@ const generateContentfulTypes = (contentfulManagementClient, space, environment,
             const items = result.items
             var stream = fs.createWriteStream(outputFilePath)
             stream.once('open', () => {
-              stream.write(`import { Entry, EntryCollection, Asset, AssetCollection } from 'contentful' \n`)
+              stream.write(`import { Entry, Asset } from 'contentful' \n`)
               items.forEach(item => {
                 stream.write(`export const ${toInterfaceName(item.sys.id, prefix)} = '${item.sys.id}'\n`)
                 stream.write(`export interface ${toInterfaceName(item.sys.id, prefix)} { \n`)
