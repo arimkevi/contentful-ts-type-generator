@@ -14,43 +14,37 @@ const toInterfaceName = (s, prefix = '') => {
     .replace(/-[A-Za-z0-9_]/g, (match) => match.slice(1).toUpperCase())
 }
 
-function formatType(field, prefix = '') {
+function formatType(field, prefix = '', isArray = false) {
   var type = field.type
-  if (type === 'Text' || type === 'Symbol') return 'string'
+  if (type === 'Text' || type === 'Symbol') {
+    if(field.validations && field.validations[0] && field.validations[0].in) {
+      if(isArray) {
+        return `(${field.validations[0].in.map(validValue => `'${validValue}'`).join('|')})[]`
+      } else {
+        return field.validations[0].in.map(validValue => `'${validValue}'`).join('|')
+      }
+    } else {
+      return 'string'+ (isArray ? '[]' : '')
+    }
+  }
   if (type === 'Number' || type === 'Integer') return 'number'
   if (type === 'Boolean') return 'boolean'
   if (type === 'Link' && field.linkType === 'Asset') {
-    return 'Asset'
+    return `Asset${isArray ? '[]' : ''}`
   }
   if (type === 'Link' && field.linkType === 'Entry') {
     if(field.validations && field.validations[0] && field.validations[0].linkContentType) {
-      if(field.validations[0].linkContentType.length === 1) {
-        return `Entry <${toInterfaceName(field.validations[0].linkContentType[0], prefix)}>`
-      } else {
-        let typeString = ''
-        field.validations && field.validations[0].linkContentType.forEach(type => {
-          typeString = `${typeString} | ${toInterfaceName(type, prefix)}`
-        })
-        return `Entry <${typeString.substr(3)}>`
-      }
+      const fieldTypes =  field.validations && field.validations[0].linkContentType.map(type => {
+        return toInterfaceName(type, prefix)
+      }).join('|')
+      return `Entry<${fieldTypes}>${isArray ? '[]' : ''}`
     } else {
       return 'any'
     }
   }
-
   if (type === 'Array') {
-    const validations = field.items.validations[0]
-    if(validations !== undefined && validations.linkContentType) {
-      var typeString = 'Entry < '
-      validations.linkContentType.forEach(item => {
-        typeString = `${typeString}${toInterfaceName(item, prefix)} ${validations.linkContentType.length === 1  ? '' : '|'} `
-      })
-      typeString = `${typeString}>  []`
-      return typeString.indexOf('| >') > 0 ? typeString.slice(0,typeString.indexOf('| >')) + typeString.slice(typeString.indexOf('| >')+1): typeString
-    }
-    return 'Entry<any>[]'
+    return formatType(field.items, prefix, true)
   }
-  return 'any'
 }
 
 const generateContentfulTypes = (contentfulManagementClient, space, environment, outputFilePath = './contentfulTypes.d.ts', prefix = '' ) => {
@@ -64,17 +58,21 @@ const generateContentfulTypes = (contentfulManagementClient, space, environment,
             stream.once('open', () => {
               stream.write(`import { Entry, Asset } from 'contentful' \n`)
               items.forEach(item => {
-                stream.write(`export const ${toInterfaceName(item.sys.id, prefix)} = '${item.sys.id}'\n`)
-                stream.write(`export interface ${toInterfaceName(item.sys.id, prefix)} { \n`)
-                stream.write(`  //${item.name}\n`)
-                stream.write(`  /* ${item.description} */\n`)
-                item.fields.forEach(field => {
-                  var type = formatType(field, prefix)
-                  var nullable = field.required === 'true' ? '' : '?'
-                  stream.write(`  ${field.id}${nullable}: ${type}  \n`)
-                })
-                stream.write(`}\n\n`)
+                if(!item.omitted) {
+                  stream.write(`export const ${toInterfaceName(item.sys.id, prefix)} = '${item.sys.id}'\n`)
+                  stream.write(`export interface ${toInterfaceName(item.sys.id, prefix)} { \n`)
+                  stream.write(`  //${item.name}\n`)
+                  stream.write(`  /* ${item.description} */\n`)
+                  item.fields.forEach(field => {
+                    var type = formatType(field, prefix)
+
+                    var nullable = field.required === true ? '' : '?'
+                    stream.write(`  ${field.id}${nullable}: ${type}  \n`)
+                  })
+                  stream.write(`}\n\n`)
+                }
               })
+
               stream.end()
               console.log('Generated ', path.normalize(outputFilePath))
             })
