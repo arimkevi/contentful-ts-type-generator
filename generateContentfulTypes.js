@@ -51,7 +51,7 @@ const generateContentfulTypes = (contentfulManagementClient, space, environment,
   contentfulManagementClient.getSpace(space)
     .then((space) => space.getEnvironment(environment))
       .then((environment) => {
-        environment.getContentTypes({limit:1000})
+        environment.getContentTypes({limit:1000, order: 'sys.id'})
           .then(result => {
             const items = result.items
             var stream = fs.createWriteStream(outputFilePath)
