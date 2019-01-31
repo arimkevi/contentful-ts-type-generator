@@ -47,30 +47,29 @@ function formatType(field, prefix = '', isArray = false) {
   }
 }
 
-const generateContentfulTypes = (contentfulManagementClient, space, environment, outputFilePath = './contentfulTypes.d.ts', prefix = '' ) => {
+const generateContentfulTypes = (contentfulManagementClient, space, environment, outputFilePath = './contentfulTypes.d.ts', prefix = '', ignoredFields = [] ) => {
   contentfulManagementClient.getSpace(space)
     .then((space) => space.getEnvironment(environment))
       .then((environment) => {
-        environment.getContentTypes({limit:1000})
+        environment.getContentTypes({limit:1000, order: 'sys.id'})
           .then(result => {
             const items = result.items
             var stream = fs.createWriteStream(outputFilePath)
             stream.once('open', () => {
               stream.write(`import { Entry, Asset } from 'contentful' \n`)
               items.forEach(item => {
-                if(!item.omitted) {
                   stream.write(`export const ${toInterfaceName(item.sys.id, prefix)} = '${item.sys.id}'\n`)
                   stream.write(`export interface ${toInterfaceName(item.sys.id, prefix)} { \n`)
                   stream.write(`  //${item.name}\n`)
                   stream.write(`  /* ${item.description} */\n`)
                   item.fields.forEach(field => {
-                    var type = formatType(field, prefix)
-
-                    var nullable = field.required === true ? '' : '?'
-                    stream.write(`  ${field.id}${nullable}: ${type}  \n`)
+                    if(field.omitted !== true && !ignoredFields.includes(field.id)) {
+                      var type = formatType(field, prefix)
+                      var nullable = field.required === true ? '' : '?'
+                      stream.write(`  ${field.id}${nullable}: ${type}  \n`)
+                    }
                   })
                   stream.write(`}\n\n`)
-                }
               })
 
               stream.end()
@@ -92,13 +91,13 @@ const generateContentfulTypes = (contentfulManagementClient, space, environment,
     })
 }
 
-const createClientAndGenerate = (space, accessToken, outputFilePath = './contentfulTypes.d.ts', host = 'cdn.contentful.com', environment = 'master', prefix = '') => {
+const createClientAndGenerate = (space, accessToken, outputFilePath = './contentfulTypes.d.ts', host = 'cdn.contentful.com', environment = 'master', prefix = '', ignoredFields) => {
   const client = contentful.createClient({
     host,
     accessToken,
     resolveLinks: true,
   })
-  generateContentfulTypes(client, space, environment, outputFilePath, prefix)
+  generateContentfulTypes(client, space, environment, outputFilePath, prefix, ignoredFields.split(','))
 }
 
 
@@ -112,7 +111,8 @@ program
   .option('-e, --environment [value]', 'Contentful environment id to use', 'master')
   .option('-p, --prefix <value>', 'Name prefix for generated interfaces', '')
   .option('-h, --host [value]', 'Contentful host', 'api.contentful.com')
-  .action((spaceId, accessToken, options) => createClientAndGenerate(spaceId, accessToken, options.output, options.host, options.environment, options.prefix))
+  .option('-i, --ignore [value]', 'Ignored field(s): a single field id or comma separated list of field ids', '')
+  .action((spaceId, accessToken, options) => createClientAndGenerate(spaceId, accessToken, options.output, options.host, options.environment, options.prefix, options.ignore))
   .parse(process.argv);
 
 if (!program.args.length) {
