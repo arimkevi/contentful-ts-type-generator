@@ -88,7 +88,6 @@ const writeTypesToFile = (types, outputFilePath, prefix, ignoredFields = [] ) =>
         stream.write(`}\n\n`)
     })
     stream.end()
-    console.log('Generated ', path.normalize(outputFilePath))
   })
 }
           
@@ -104,7 +103,9 @@ const generateContentfulTypes = (space, accessToken, outputFilePath = './content
       onError: (e) => {
         console.log(e)
       },
-      onCompleted: () => {}
+      onCompleted: () => {
+        console.log('Generated to', path.normalize(outputFilePath))
+      }
     }) 
 }
 
