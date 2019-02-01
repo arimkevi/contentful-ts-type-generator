@@ -15,15 +15,24 @@ node generateContentfulTypes <SPACE_ID> <MANAGEMENT_TOKEN>
 
 This will generate contentfulTypes.d.ts file that will contain all of the space model as interfaces and inheritance. Export contains also model sys.id.
 
+5. Options
 
-4. Once the types are generated you can use the contentful.js calling the following function:
+```
+  -o, --output <file>, Output file path. Default: './contentfulTypes.d.ts'
+  -e, --environment [value], Contentful environment id to use. Default: 'master'
+  -p, --prefix <value>, Name prefix for generated interfaces. Default: ''
+  -h, --host [value], Default: 'api.contentful.com'
+  -i, --ignore [value], Ignored field(s): a single field id or comma separated list of field ids. Default: ''
+```
+
+6. Once the types are generated you can use contentful.js calling the following function:
 
 ```
 
 const client = contentful.createClient({
   host: 'contentfulHost',
   accessToken: 'accessToken',
-  space: 'spaceId'e,
+  space: 'spaceId',
   resolveLinks: true,
 })
 
