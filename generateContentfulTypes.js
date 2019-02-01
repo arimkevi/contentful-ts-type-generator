@@ -15,36 +15,60 @@ const toInterfaceName = (s, prefix = '') => {
 
 const relativePath = path.normalize(path.relative(process.cwd(), __dirname))
 
+const mapToStringArray = arr => arr.map(validValue => `'${validValue}'`)
+
 const formatType = (field, prefix = '', isArray = false) => {
-  var type = field.type
-  if (type === 'Text' || type === 'Symbol') {
-    if(field.validations && field.validations[0] && field.validations[0].in) {
-      if(isArray) {
-        return `(${field.validations[0].in.map(validValue => `'${validValue}'`).join('|')})[]`
+  const type = field.type
+  switch (type) {
+    case 'Text':
+    case 'Symbol':
+    case 'Date':
+      const specificValuesValidation = field.validations &&
+        field.validations.find(validation => validation.hasOwnProperty('in'))
+      if (specificValuesValidation) {
+        console.log('specificValuesValidation', specificValuesValidation)
+        const stringLiteralTypes = mapToStringArray(specificValuesValidation.in).join('|')
+        if (isArray) {
+          return `(${stringLiteralTypes})[]`
+        } else {
+          return stringLiteralTypes
+        }
       } else {
-        return field.validations[0].in.map(validValue => `'${validValue}'`).join('|')
+        return 'string' + (isArray ? '[]' : '')
       }
-    } else {
-      return 'string'+ (isArray ? '[]' : '')
-    }
-  }
-  if (type === 'Number' || type === 'Integer') return 'number'
-  if (type === 'Boolean') return 'boolean'
-  if (type === 'Link' && field.linkType === 'Asset') {
-    return `Asset${isArray ? '[]' : ''}`
-  }
-  if (type === 'Link' && field.linkType === 'Entry') {
-    if(field.validations && field.validations[0] && field.validations[0].linkContentType) {
-      const fieldTypes =  field.validations && field.validations[0].linkContentType.map(type => {
-        return toInterfaceName(type, prefix)
-      }).join('|')
-      return `Entry<${fieldTypes}>${isArray ? '[]' : ''}`
-    } else {
+    case 'Number':
+    case 'Integer':
+      return 'number'
+    case 'Boolean':
+      return 'boolean'
+    case 'Location':
+      return '{ lat:string, lon:string }' // Use type directly from contentful.js when available
+    case 'Object': // JSON object
       return 'any'
-    }
-  }
-  if (type === 'Array') {
-    return formatType(field.items, prefix, true)
+    case 'RichText':
+      return '{ data: any, content: any, nodeType: string }' // Use type directly from contentful.js when available
+    case 'Link':
+      if (field.linkType === 'Asset') {
+        return `Asset${isArray ? '[]' : ''}`
+      } else if (field.linkType === 'Entry') {
+        const linkContentTypeValidation = field.validations && field.validations.find(validation => validation.hasOwnProperty('linkContentType'))
+        if (linkContentTypeValidation) {
+          const fieldTypes = linkContentTypeValidation.linkContentType.map(type => {
+            return toInterfaceName(type, prefix)
+          }).join('|')
+          return `Entry<${fieldTypes}>${isArray ? '[]' : ''}`
+        } else {
+          return `any${isArray ? '[]' : ''}`
+        }
+      } else {
+        console.warn(`Unknown linkType "${field.linkType}" in field ${field.id}`)
+        return 'any'
+      }
+    case 'Array':
+      return formatType(field.items, prefix, true)
+    default:
+      console.warn(`Unknown field type: ${type} in field ${field.id}`)
+      return `any${isArray ? '[]' : ''}`
   }
 }
 
@@ -90,7 +114,7 @@ const writeTypesToFile = (types, outputFilePath, prefix, ignoredFields = [] ) =>
     stream.end()
   })
 }
-          
+
 const generateContentfulTypes = (space, accessToken, outputFilePath = './contentfulTypes.d.ts', host = 'cdn.contentful.com', environment = 'master', prefix = '', ignoredFields) => {
   const client = createClient(host, accessToken)
   getSpace(client, space)
@@ -106,7 +130,7 @@ const generateContentfulTypes = (space, accessToken, outputFilePath = './content
       onCompleted: () => {
         console.log('Generated to', path.normalize(outputFilePath))
       }
-    }) 
+    })
 }
 
 program
