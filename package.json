@@ -22,5 +22,8 @@
     "commander": "^2.19.0",
     "contentful-management": "^5.4.0",
     "rx": "^4.1.0"
+  },
+  "bin": {
+      "generateContentfulTypes": "./generateContentfulTypes.js"
   }
 }
