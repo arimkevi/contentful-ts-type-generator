@@ -2,18 +2,26 @@
 
 1. Get management api token and spaceId from Contentful. 
 
-2. Run the script to get help options
-```
-node generateContentfulTypes
-```
-
-3. Base usage
+2. Install this repository into your node project
 
 ```
-node generateContentfulTypes <SPACE_ID> <MANAGEMENT_TOKEN>
+npm install github:arimkevi/contentful-ts-type-generator
+```
+
+3. Run the script to get help options
+```
+npx generateContentfulTypes
+```
+
+4. Base usage
+
+```
+npx generateContentfulTypes <SPACE_ID> <MANAGEMENT_TOKEN>
 ```
 
 This will generate contentfulTypes.d.ts file that will contain all of the space model as interfaces and inheritance. Export contains also model sys.id.
+
+If you use the `generateContentfulTypes` command in your package.json scripts, you can leave out the `npx` in front of it.
 
 5. Options
 
@@ -27,7 +35,7 @@ This will generate contentfulTypes.d.ts file that will contain all of the space 
 
 6. Once the types are generated you can use contentful.js calling the following function:
 
-```
+```ts
 
 const client = contentful.createClient({
   host: 'contentfulHost',
