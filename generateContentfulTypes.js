@@ -17,6 +17,8 @@ const relativePath = path.normalize(path.relative(process.cwd(), __dirname))
 
 const mapToStringArray = arr => arr.map(validValue => `'${validValue}'`)
 
+const formatArray = (isArray, typeName) => isArray ? `ReadonlyArray<${typeName}>` : typeName
+
 const formatType = (field, prefix = '', isArray = false) => {
   const type = field.type
   switch (type) {
@@ -27,14 +29,9 @@ const formatType = (field, prefix = '', isArray = false) => {
         field.validations.find(validation => validation.hasOwnProperty('in'))
       if (specificValuesValidation) {
         console.log('specificValuesValidation', specificValuesValidation)
-        const stringLiteralTypes = mapToStringArray(specificValuesValidation.in).join('|')
-        if (isArray) {
-          return `(${stringLiteralTypes})[]`
-        } else {
-          return stringLiteralTypes
-        }
+        return formatArray(isArray, mapToStringArray(specificValuesValidation.in).join('|'))
       } else {
-        return 'string' + (isArray ? '[]' : '')
+        return formatArray(isArray, 'string')
       }
     case 'Number':
     case 'Integer':
@@ -49,16 +46,16 @@ const formatType = (field, prefix = '', isArray = false) => {
       return '{ data: any, content: any, nodeType: string }' // Use type directly from contentful.js when available
     case 'Link':
       if (field.linkType === 'Asset') {
-        return `Asset${isArray ? '[]' : ''}`
+        return formatArray(isArray, 'Asset')
       } else if (field.linkType === 'Entry') {
         const linkContentTypeValidation = field.validations && field.validations.find(validation => validation.hasOwnProperty('linkContentType'))
         if (linkContentTypeValidation) {
           const fieldTypes = linkContentTypeValidation.linkContentType.map(type => {
             return toInterfaceName(type, prefix)
           }).join('|')
-          return `Entry<${fieldTypes}>${isArray ? '[]' : ''}`
+            return formatArray(isArray, `Entry<${fieldTypes}>`)
         } else {
-          return `any${isArray ? '[]' : ''}`
+          return formatArray(isArray, 'any')
         }
       } else {
         console.warn(`Unknown linkType "${field.linkType}" in field ${field.id}`)
@@ -68,7 +65,7 @@ const formatType = (field, prefix = '', isArray = false) => {
       return formatType(field.items, prefix, true)
     default:
       console.warn(`Unknown field type: ${type} in field ${field.id}`)
-      return `any${isArray ? '[]' : ''}`
+      return formatArray(isArray, 'any')
   }
 }
 
@@ -106,7 +103,7 @@ const writeTypesToFile = (types, outputFilePath, prefix, ignoredFields = [] ) =>
           if(field.omitted !== true && !ignoredFields.includes(field.id)) {
             var type = formatType(field, prefix)
             var nullable = field.required === true ? '' : '?'
-            stream.write(`  ${field.id}${nullable}: ${type}  \n`)
+            stream.write(`  readonly ${field.id}${nullable}: ${type}  \n`)
           }
         })
         stream.write(`}\n\n`)
