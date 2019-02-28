@@ -19,6 +19,13 @@ const mapToStringArray = arr => arr.map(validValue => `'${validValue}'`)
 
 const formatArray = (isArray, typeName) => isArray ? `ReadonlyArray<${typeName}>` : typeName
 
+const concatLinkTypes = (prefix, linkContentType) =>
+  Array.isArray(linkContentType)
+    ? linkContentType.map(type => {
+        return toInterfaceName(type, prefix)
+      }).join('|')
+    : toInterfaceName(linkContentType, prefix)
+
 const formatType = (field, prefix = '', isArray = false) => {
   const type = field.type
   switch (type) {
@@ -50,10 +57,9 @@ const formatType = (field, prefix = '', isArray = false) => {
       } else if (field.linkType === 'Entry') {
         const linkContentTypeValidation = field.validations && field.validations.find(validation => validation.hasOwnProperty('linkContentType'))
         if (linkContentTypeValidation) {
-          const fieldTypes = linkContentTypeValidation.linkContentType.map(type => {
-            return toInterfaceName(type, prefix)
-          }).join('|')
-            return formatArray(isArray, `Entry<${fieldTypes}>`)
+          const linkContentType = linkContentTypeValidation.linkContentType
+          const fieldTypes = concatLinkTypes(prefix, linkContentType)
+          return formatArray(isArray, `Entry<${fieldTypes}>`)
         } else {
           return formatArray(isArray, 'any')
         }
