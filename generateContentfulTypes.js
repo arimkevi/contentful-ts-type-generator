@@ -80,8 +80,21 @@ const getEnvironment = (space, environment) => {
   return Rx.Observable.fromPromise(space.getEnvironment(environment))
 }
 
-const getTypes = (environment) => {
-  return Rx.Observable.fromPromise(environment.getContentTypes({limit:1000, order: 'sys.id'}))
+const getLocales = (environment, locales = [], skip = 0) => {
+  return environment.getLocales({skip}).then(result => {
+    locales = [...locales, ...result.items]
+    if( result.total < result.limit + result.skip) {
+      return getLocales(environment, locales, result.limit + result.skip )
+    } else {
+      return locales.map(locale => locale.code)
+    }})
+}
+
+const getTypesAndLocales = (environment) => {
+  return Rx.Observable.fromPromise(Promise.all([
+    environment.getContentTypes({limit:1000, order: 'sys.id'}),
+    getLocales(environment),
+  ]))
 }
 
 const createClient = (host, accessToken) => {
@@ -92,11 +105,12 @@ const createClient = (host, accessToken) => {
   })
 }
 
-const writeTypesToFile = (types, outputFilePath, prefix, ignoredFields = [] ) => {
+const writeTypesToFile = (locales, types, outputFilePath, prefix, ignoredFields = [] ) => {
   const items = types.items
   var stream = fs.createWriteStream(outputFilePath)
   stream.once('open', () => {
     stream.write(`import { Entry, Asset } from 'contentful' \n`)
+    stream.write(`export type ${prefix}Locale = ${mapToStringArray(locales).join('|')} \n`)
     items.forEach(item => {
         stream.write(`export const ${toInterfaceName(item.sys.id, prefix)} = '${item.sys.id}'\n`)
         stream.write(`export interface ${toInterfaceName(item.sys.id, prefix)} { \n`)
@@ -119,10 +133,10 @@ const generateContentfulTypes = (space, accessToken, outputFilePath = './content
   const client = createClient(host, accessToken)
   getSpace(client, space)
     .flatMap(space => getEnvironment(space, environment))
-    .flatMap(getTypes)
+    .flatMap(getTypesAndLocales)
     .subscribe({
-      onNext: (types) => {
-        writeTypesToFile(types, outputFilePath, prefix, ignoredFields.split(','))
+      onNext: ([types, locales]) => { //[types, locales]
+        writeTypesToFile(locales, types, outputFilePath, prefix, ignoredFields.split(','))
       },
       onError: (e) => {
         console.log(e)
