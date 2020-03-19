@@ -1,6 +1,6 @@
 {
   "name": "contentful-ts-type-generator",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Typescript type declaration file generator from Contentful models",
   "main": "generateContentfulTypes.js",
   "scripts": {
@@ -20,7 +20,7 @@
   "homepage": "https://github.com/arimkevi/contentful-ts-type-generator#readme",
   "dependencies": {
     "commander": "^2.20.3",
-    "contentful-management": "^5.13.0",
+    "contentful": "^7.14.0",
     "rx": "^4.1.0"
   },
   "bin": {

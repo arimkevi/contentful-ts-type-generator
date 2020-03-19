@@ -1,6 +1,6 @@
 ## Usage
 
-1. Get management api token and spaceId from Contentful. 
+1. Get preview api token and spaceId from Contentful. 
 
 2. Install this repository into your node project
 

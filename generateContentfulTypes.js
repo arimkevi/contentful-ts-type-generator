@@ -2,7 +2,7 @@
 /*jshint esversion: 6 */
 
 const program = require('commander');
-const contentful = require('contentful-management')
+const contentful = require('contentful')
 const fs = require('fs')
 const path = require('path')
 const Rx = require('rx')
@@ -75,26 +75,6 @@ const formatType = (field, prefix = '', isArray = false) => {
   }
 }
 
-const getSpace = (client, space) => {
-  return Rx.Observable.fromPromise(client.getSpace(space))
-}
-
-const getEnvironment = (space, environment) => {
-  return Rx.Observable.fromPromise(space.getEnvironment(environment))
-}
-
-const getTypes = (environment) => {
-  return Rx.Observable.fromPromise(environment.getContentTypes({limit:1000, order: 'sys.id'}))
-}
-
-const createClient = (host, accessToken) => {
-  return contentful.createClient({
-    host,
-    accessToken,
-    resolveLinks: true,
-  })
-}
-
 const writeTypesToFile = (types, outputFilePath, prefix, ignoredFields = [] ) => {
   const items = types.items
   var stream = fs.createWriteStream(outputFilePath)
@@ -119,10 +99,16 @@ const writeTypesToFile = (types, outputFilePath, prefix, ignoredFields = [] ) =>
 }
 
 const generateContentfulTypes = (space, accessToken, outputFilePath = './contentfulTypes.d.ts', host = 'cdn.contentful.com', environment = 'master', prefix = '', ignoredFields) => {
-  const client = createClient(host, accessToken)
-  getSpace(client, space)
-    .flatMap(space => getEnvironment(space, environment))
-    .flatMap(getTypes)
+  const client = contentful.createClient({
+    host,
+    environment,
+    space,
+    accessToken,
+    resolveLinks: true,
+  })
+
+  Rx.Observable
+    .fromPromise(client.getContentTypes())
     .subscribe({
       onNext: (types) => {
         writeTypesToFile(types, outputFilePath, prefix, ignoredFields.split(','))
@@ -144,7 +130,7 @@ program
   .option('-o, --output <file>', 'Output file path', './contentfulTypes.d.ts')
   .option('-e, --environment [value]', 'Contentful environment id to use', 'master')
   .option('-p, --prefix <value>', 'Name prefix for generated interfaces', '')
-  .option('-h, --host [value]', 'Contentful host', 'api.contentful.com')
+  .option('-h, --host [value]', 'Contentful host (cdn.contentful.com, preview.contentful.com)', 'cdn.contentful.com')
   .option('-i, --ignore [value]', 'Ignored field(s): a single field id or comma separated list of field ids', '')
   .action((spaceId, accessToken, options) => generateContentfulTypes(spaceId, accessToken, options.output, options.host, options.environment, options.prefix, options.ignore))
   .parse(process.argv);
