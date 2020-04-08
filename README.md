@@ -16,7 +16,7 @@ npx generateContentfulTypes
 4. Base usage
 
 ```
-npx generateContentfulTypes <SPACE_ID> <MANAGEMENT_TOKEN>
+npx generateContentfulTypes <SPACE_ID> <PREVIEW_API_TOKEN>
 ```
 
 This will generate contentfulTypes.d.ts file that will contain all of the space model as interfaces and inheritance. Export contains also model sys.id.
