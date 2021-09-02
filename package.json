@@ -19,9 +19,9 @@
   },
   "homepage": "https://github.com/arimkevi/contentful-ts-type-generator#readme",
   "dependencies": {
-    "commander": "^2.20.3",
-    "contentful": "^7.14.0",
-    "rx": "^4.1.0"
+    "commander": "2.20.3",
+    "contentful": "8.5.3",
+    "rx": "4.1.0"
   },
   "bin": {
     "generateContentfulTypes": "./generateContentfulTypes.js"
