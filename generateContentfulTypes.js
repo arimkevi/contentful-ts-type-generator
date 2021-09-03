@@ -50,7 +50,7 @@ const formatType = (field, prefix = '', isArray = false) => {
     case 'Object': // JSON object
       return 'any'
     case 'RichText':
-      return '{ data: any, content: any, nodeType: string }' // Use type directly from contentful.js when available
+      return '{ content: any, data: any, nodeType: string }' // Use type directly from contentful.js when available
     case 'Link':
       if (field.linkType === 'Asset') {
         return formatArray(isArray, 'Asset')
@@ -79,17 +79,17 @@ const writeTypesToFile = (types, outputFilePath, prefix, ignoredFields = [] ) =>
   const items = types.items
   var stream = fs.createWriteStream(outputFilePath)
   stream.once('open', () => {
-    stream.write(`import { Entry, Asset } from 'contentful' \n`)
-    items.forEach(item => {
+    stream.write(`import { Entry, Asset } from 'contentful'\n`)
+    items.sort((a, b) => toInterfaceName(a.sys.id, prefix).localeCompare(toInterfaceName(b.sys.id, prefix))).forEach(item => {
         stream.write(`export const ${toInterfaceName(item.sys.id, prefix)} = '${item.sys.id}'\n`)
-        stream.write(`export interface ${toInterfaceName(item.sys.id, prefix)} { \n`)
+        stream.write(`export interface ${toInterfaceName(item.sys.id, prefix)} {\n`)
         stream.write(`  //${item.name}\n`)
         stream.write(`  /* ${item.description} */\n`)
-        item.fields.forEach(field => {
+        item.fields.sort((a, b) => a.id.localeCompare(b.id)).forEach(field => {
           if(field.omitted !== true && !ignoredFields.includes(field.id)) {
             var type = formatType(field, prefix)
             var nullable = field.required === true ? '' : '?'
-            stream.write(`  readonly ${field.id}${nullable}: ${type}  \n`)
+            stream.write(`  readonly ${field.id}${nullable}: ${type}\n`)
           }
         })
         stream.write(`}\n\n`)

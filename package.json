@@ -19,7 +19,7 @@
   },
   "homepage": "https://github.com/arimkevi/contentful-ts-type-generator#readme",
   "dependencies": {
-    "commander": "2.20.3",
+    "commander": "8.1.0",
     "contentful": "8.5.3",
     "rx": "4.1.0"
   },
