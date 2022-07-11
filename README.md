@@ -1,3 +1,5 @@
+## THIS IS AN ALAMY FORK OF THE ORIGINAL REPOSITORY
+
 ## Usage
 
 1. Get preview api token and spaceId from Contentful. 
@@ -5,7 +7,7 @@
 2. Install this repository into your node project
 
 ```
-npm install github:arimkevi/contentful-ts-type-generator
+npm install @alamy-ops/contentful-ts-type-generator
 ```
 
 3. Run the script to get help options
