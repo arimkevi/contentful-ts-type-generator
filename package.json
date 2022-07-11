@@ -1,12 +1,12 @@
 {
-  "name": "contentful-ts-type-generator",
+  "name": "@alamy-ops/contentful-ts-type-generator",
   "version": "0.6.3",
   "description": "Typescript type declaration file generator from Contentful models",
   "main": "generateContentfulTypes.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "repository": "git+https://github.com/arimkevi/contentful-ts-type-generator.git",
+  "repository": "git+https://github.com/alamy-ops/contentful-ts-type-generator.git",
   "keywords": [
     "contentful",
     "typescript",
@@ -15,9 +15,9 @@
   "author": "Artur Rimkevitch",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/arimkevi/contentful-ts-type-generator/issues"
+    "url": "https://github.com/alamy-ops/contentful-ts-type-generator/issues"
   },
-  "homepage": "https://github.com/arimkevi/contentful-ts-type-generator#readme",
+  "homepage": "https://github.com/alamy-ops/contentful-ts-type-generator#readme",
   "dependencies": {
     "commander": "8.1.0",
     "contentful": "8.5.3",
